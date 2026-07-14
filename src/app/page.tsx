@@ -68,7 +68,7 @@ export default function HomePage() {
       />
 
       {/* ========== 导航 ========== */}
-      <header className="relative z-50 fixed top-0 w-full px-16 py-6">
+      <header className="relative z-50 fixed top-0 w-full px-5 py-4 sm:px-16 sm:py-6">
         <nav className="flex items-center justify-between max-w-5xl mx-auto">
           {/* Logo - 抽象 X */}
           <div className="flex items-center gap-3">
@@ -95,11 +95,11 @@ export default function HomePage() {
           </div>
 
           {/* 链接 */}
-          <div className="flex items-center gap-10 text-[13px]">
+          <div className="flex items-center gap-4 text-[12px] sm:gap-10 sm:text-[13px]">
             <Link href="/dashboard" className="nav-item text-[#686878] hover:text-white transition-colors duration-200">账号</Link>
             <Link href="/admin" className="nav-item text-[#686878] hover:text-white transition-colors duration-200">管理</Link>
             <Link href="/applications" className="nav-item text-[#686878] hover:text-white transition-colors duration-200">接入</Link>
-            <Link href="/sign-in" className="nav-item ml-4 px-5 py-2.5 bg-white text-[#020208] rounded-full font-medium hover:bg-[#f5f5fa] transition-all duration-200">
+            <Link href="/sign-in" className="nav-item px-4 py-2.5 bg-white text-[#020208] rounded-full font-medium hover:bg-[#f5f5fa] transition-all duration-200 sm:ml-4 sm:px-5">
               登录
             </Link>
           </div>
@@ -107,12 +107,12 @@ export default function HomePage() {
       </header>
 
       {/* ========== Hero ========== */}
-      <section className="relative min-h-screen flex flex-col justify-end px-16 pb-36">
+      <section className="relative min-h-[78svh] flex flex-col justify-end px-6 pb-10 pt-24 sm:min-h-screen sm:px-16 sm:pb-36 sm:pt-0">
         <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-[#020208] via-[#020208]/50 to-transparent" />
 
         <div className="relative max-w-4xl">
           {/* Badge */}
-          <div className="badge inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-[#1a1a2a] bg-[#0c0c18]/90 backdrop-blur-xl mb-14">
+          <div className="badge mb-6 inline-flex items-center gap-3 rounded-full border border-[#1a1a2a] bg-[#0c0c18]/90 px-5 py-2.5 backdrop-blur-xl sm:mb-14">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[10px] text-[#585870] tracking-[0.12em] uppercase">安全认证</span>
             <span className="text-[#252538] mx-2">|</span>
@@ -120,19 +120,19 @@ export default function HomePage() {
           </div>
 
           {/* 标题 */}
-          <h1 className="text-[clamp(64px,12vw,150px)] leading-[0.9] tracking-[-0.025em] font-semibold mb-12">
+          <h1 className="mb-6 text-[54px] font-semibold leading-[0.9] tracking-[0] sm:mb-12 sm:text-[clamp(64px,12vw,150px)]">
             <span className="line1 block text-white">你的账号</span>
             <span className="line2 grad-text block bg-gradient-to-r from-blue-400 via-indigo-300 to-blue-300 bg-[length:200%_auto] bg-clip-text text-transparent">安全中心</span>
           </h1>
 
           {/* 描述 */}
-          <p className="desc text-[17px] text-[#505065] leading-[1.85] max-w-lg mb-14">
+          <p className="desc mb-7 max-w-lg text-[15px] leading-[1.7] text-[#505065] sm:mb-14 sm:text-[17px] sm:leading-[1.85]">
             统一身份认证，集中授权管理。
             <br />为每一个应用保驾护航。
           </p>
 
           {/* CTA */}
-          <div className="cta-group flex items-center gap-8">
+          <div className="cta-group flex items-center gap-4 sm:gap-8">
             <Link href="/sign-up" className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-[#020208] rounded-full text-[14px] font-medium hover:bg-[#f5f5fa] transition-all duration-200">
               开始使用
               <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform duration-150" />
@@ -144,7 +144,7 @@ export default function HomePage() {
         </div>
 
         {/* 滚动指示 */}
-        <div className="absolute bottom-16 right-20 flex flex-col items-center gap-3">
+        <div className="absolute bottom-16 right-20 hidden flex-col items-center gap-3 sm:flex">
           <span className="text-[8px] tracking-[0.3em] text-[#252535] uppercase">Scroll</span>
           <div className="relative w-px h-14 bg-gradient-to-b from-[#1e1e2e] to-transparent">
             <div className="scroll-dot absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full" />
@@ -153,7 +153,7 @@ export default function HomePage() {
       </section>
 
       {/* ========== Section 2: 功能 ========== */}
-      <section className="features relative px-16 py-40 border-t border-[#0c0c18]">
+      <section className="features relative border-t border-[#0c0c18] px-6 py-16 sm:px-16 sm:py-40">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-12 gap-20 items-start">
             {/* 左侧 */}
@@ -167,7 +167,7 @@ export default function HomePage() {
             <div className="col-span-8 grid grid-cols-2 gap-5">
               {[
                 { num: "01", name: "邮箱登录", desc: "密码与邮箱验证码双重确认机制" },
-                { num: "02", name: "TOTP", desc: "基于时间的一次性密码标准协议" },
+                { num: "02", name: "验证器应用", desc: "每次登录都能多一步确认" },
                 { num: "03", name: "Passkey", desc: "WebAuthn 标准，硬件级安全保障" },
                 { num: "04", name: "OAuth", desc: "支持主流第三方平台联合登录" },
               ].map(({ num, name, desc }) => (
@@ -284,12 +284,12 @@ export default function HomePage() {
 
             <div className="col-span-8 rounded-xl bg-[#08080f] border border-[#101018] overflow-hidden">
               {[
-                { num: "01", title: "单点登录", desc: "一次登录，访问所有已授权应用" },
+                { num: "01", title: "单点登录", desc: "一次登录，访问所有已接入应用" },
                 { num: "02", title: "会话管理", desc: "查看并管理所有活跃会话" },
                 { num: "03", title: "安全日志", desc: "完整的登录历史和操作记录" },
                 { num: "04", title: "组织管理", desc: "创建团队，分配角色，管理成员" },
                 { num: "05", title: "API 接入", desc: "提供 RESTful API 和 SDK" },
-              ].map(({ num, title, desc }, i) => (
+              ].map(({ num, title, desc }) => (
                 <div key={title} className="feature-row group flex items-center justify-between py-5 px-8 hover:bg-[#0c0c18] transition-colors duration-200 cursor-pointer border-b border-[#0e0e18] last:border-b-0">
                   <div className="flex items-center gap-6">
                     <span className="text-[10px] text-[#2a2a3a] font-mono w-5">{num}</span>

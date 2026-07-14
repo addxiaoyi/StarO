@@ -1,13 +1,18 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/dashboard/app-shell";
 import { OAuthActions } from "@/components/oauth/oauth-actions";
 import { LinkButton } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { StatusPill } from "@/components/ui/status-pill";
 import { requireServerSession } from "@/lib/auth";
+import {
+  getScopeDescription,
+  hasSensitiveScopes,
+  SENSITIVE_OAUTH_SCOPES,
+} from "@/lib/oauth-scope-policy";
 
 const scopeCopy: Record<string, string> = {
   openid: "知道这是你的账号",
@@ -16,6 +21,8 @@ const scopeCopy: Record<string, string> = {
   offline_access: "保留这次连接，下次少确认一次",
   "read:user": "查看你的账号资料",
   "read:organization": "查看你的团队名称和身份",
+  // 新增 scope 描述
+  write: "修改你的账号或组织信息",
 };
 
 function describeScopes(value: string) {
@@ -23,7 +30,7 @@ function describeScopes(value: string) {
     .split(/\s+/)
     .map((item) => item.trim())
     .filter(Boolean)
-    .map((item) => scopeCopy[item] || "查看其他必要信息");
+    .map((item) => scopeCopy[item] || getScopeDescription(item));
 }
 
 function describeApplication(value: string) {
@@ -38,6 +45,28 @@ function describeApplication(value: string) {
   }
 
   return normalized;
+}
+
+function SensitiveScopeWarning({ scopes }: { scopes: string[] }) {
+  const sensitiveOnes = scopes.filter((s) => SENSITIVE_OAUTH_SCOPES.includes(s));
+
+  if (sensitiveOnes.length === 0) return null;
+
+  return (
+    <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+      <div className="flex items-center gap-2 text-sm font-medium text-amber-300">
+        <ShieldAlert size={16} />
+        需要特别注意的权限
+      </div>
+      <ul className="mt-2 space-y-1 text-sm text-amber-100/80">
+        {sensitiveOnes.map((scope) => (
+          <li key={scope}>
+            <span className="font-medium">{scope}</span>: {getScopeDescription(scope)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default async function OAuthConsentPage({
@@ -94,6 +123,8 @@ export default async function OAuthConsentPage({
   const applicationName = describeApplication(String(params.client_id || ""));
   const scope = String(params.scope || "openid profile email");
   const scopeItems = describeScopes(scope);
+  const scopeList = scope.split(/\s+/).filter(Boolean);
+  const showSensitiveWarning = hasSensitiveScopes(scopeList);
 
   return (
     <AppShell>
@@ -119,6 +150,7 @@ export default async function OAuthConsentPage({
               ))}
             </ul>
           </div>
+          {showSensitiveWarning && <SensitiveScopeWarning scopes={scopeList} />}
           <div className="mt-6" data-motion-rise>
             <Suspense fallback={<div className="text-sm text-zinc-500">正在准备确认选项...</div>}>
               <OAuthActions kind="consent" />

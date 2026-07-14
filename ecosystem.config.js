@@ -14,7 +14,7 @@ module.exports = {
     {
       name: "starx-oauth",
       script: "node_modules/next/dist/bin/next",
-      args: "start -p 3000",
+      args: "start -p 3002",
 
       // 工作目录
       cwd: "/www/wwwroot/auth.star-web.top",
@@ -22,7 +22,7 @@ module.exports = {
       // 运行环境
       env: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: 3002,
       },
 
       // 性能优化

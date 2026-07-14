@@ -15,7 +15,14 @@ import {
   twoFactor,
   username,
 } from "better-auth/plugins";
-import { APP_NAME, getBaseUrl, isProviderConfigured, oauthProviders } from "./app-config";
+import {
+  APP_NAME,
+  getBaseUrl,
+  isLocalTestMemoryDatabaseEnabled,
+  isProductionBuildPhase,
+  isProviderConfigured,
+  oauthProviders,
+} from "./app-config";
 import { sendAuthEmail } from "./email";
 
 export const DEVELOPMENT_ADMIN_USER_ID = "starx-dev-admin";
@@ -69,7 +76,7 @@ function isLocalBetterAuthUrl() {
 export function getDevelopmentAdminSeed() {
   const email = process.env.STARX_DEV_ADMIN_EMAIL?.trim().toLowerCase();
 
-  if (!email || process.env.DATABASE_URL || !isLocalBetterAuthUrl()) {
+  if (!email || (!isLocalTestMemoryDatabaseEnabled() && process.env.DATABASE_URL) || !isLocalBetterAuthUrl()) {
     return null;
   }
 
@@ -115,7 +122,7 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
     secret: (() => {
       const secret = process.env.BETTER_AUTH_SECRET;
       if (!secret) {
-        if (process.env.NODE_ENV === "production") {
+        if (process.env.NODE_ENV === "production" && !isProductionBuildPhase()) {
           throw new Error("BETTER_AUTH_SECRET environment variable is required in production");
         }
         return "starx-oauth-development-secret-do-not-use-in-production";
@@ -156,6 +163,59 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
           actionUrl: url,
           note: "如果不是你发起的找回密码请求，可以忽略这封邮件。",
         });
+      },
+    },
+    // 自动记录审计日志 - 使用 databaseHooks
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user, context) => {
+            const { writeAuditLog } = await import("./audit-log");
+            const request = context?.request as Request | undefined;
+            writeAuditLog({
+              event: "user.create",
+              actorId: user.id,
+              actorEmail: user.email,
+              targetUserId: user.id,
+              targetEmail: user.email,
+              ipAddress: request?.headers.get("x-forwarded-for") || request?.headers.get("x-real-ip") || undefined,
+              userAgent: request?.headers.get("user-agent") || undefined,
+            }).catch(() => {});
+          },
+        },
+        delete: {
+          after: async (user) => {
+            const { writeAuditLog } = await import("./audit-log");
+            writeAuditLog({
+              event: "user.delete",
+              targetUserId: user.id,
+              targetEmail: user.email,
+            }).catch(() => {});
+          },
+        },
+      },
+      session: {
+        create: {
+          after: async (session, context) => {
+            const { writeAuditLog } = await import("./audit-log");
+            const request = context?.request as Request | undefined;
+            writeAuditLog({
+              event: "auth.login",
+              actorId: session.userId,
+              ipAddress: request?.headers.get("x-forwarded-for") || request?.headers.get("x-real-ip") || undefined,
+              userAgent: request?.headers.get("user-agent") || undefined,
+            }).catch(() => {});
+          },
+        },
+        delete: {
+          after: async (session) => {
+            const { writeAuditLog } = await import("./audit-log");
+            writeAuditLog({
+              event: "auth.logout",
+              actorId: session.userId,
+            }).catch(() => {});
+          },
+        },
       },
     },
     socialProviders: {
@@ -226,9 +286,17 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
       }),
       passkey(),
       oneTap(),
-      multiSession(),
+      multiSession({
+        // 最大并发会话数 (默认 5)
+        maximumSessions: Number(process.env.STARX_MAX_SESSIONS) || 10,
+      }),
       bearer(),
-      jwt(),
+      jwt({
+        jwt: {
+          // JWT 过期时间 (默认 15m，支持 "15m", "1h", "7d" 等格式)
+          expirationTime: process.env.STARX_JWT_EXPIRES_IN || "1h",
+        },
+      }),
       apiKey({
         defaultPrefix: "starx_",
         requireName: true,
@@ -255,7 +323,8 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
       oauthProvider({
         loginPage: "/sign-in",
         consentPage: "/oauth/consent",
-        allowDynamicClientRegistration: true,
+        allowDynamicClientRegistration:
+          process.env.NODE_ENV !== "production" || process.env.STARX_ALLOW_DYNAMIC_CLIENT_REGISTRATION === "true",
         clientRegistrationDefaultScopes: ["openid", "profile", "email", "offline_access"],
         scopes: ["openid", "profile", "email", "offline_access", "read:user", "read:organization"],
         signup: {

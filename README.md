@@ -57,11 +57,19 @@ MICROSOFT_CLIENT_SECRET=
 
 EMAIL_FROM=StarX-Oauth <noreply@example.com>
 RESEND_API_KEY=
+SMTP_HOST=
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASS=
 
 STARX_ADMIN_USER_IDS=
 STARX_DEV_ADMIN_EMAIL=
 STARX_DEV_ADMIN_NAME=
 STARX_DEV_ADMIN_PASSWORD_HASH=
+STARX_USE_MEMORY_DB=
+
+STARX_ALLOW_DYNAMIC_CLIENT_REGISTRATION=
 
 STARX_FIRST_ADMIN_EMAIL=
 STARX_FIRST_ADMIN_NAME=
@@ -71,7 +79,9 @@ STARX_FIRST_ADMIN_PASSWORD_HASH=
 
 `STARX_ADMIN_USER_IDS` 用英文逗号分隔，用来指定哪些用户是管理员。
 
-本地没有配置 `DATABASE_URL` 时，可以设置 `STARX_DEV_ADMIN_EMAIL` 自动创建一个内存管理员账号。用这个邮箱和本地默认密码 `Password123!` 登录即可。这个种子账号只会在 Better Auth 指向 `localhost` 或 `127.0.0.1` 时启用；设置了 `DATABASE_URL` 后会自动跳过。需要换本地密码时，可以用 `STARX_DEV_ADMIN_PASSWORD_HASH` 覆盖默认密码哈希。
+本地没有配置 `DATABASE_URL` 时，可以设置 `STARX_DEV_ADMIN_EMAIL` 自动创建一个内存管理员账号。用这个邮箱和本地默认密码 `Password123!` 登录即可。这个种子账号只会在 Better Auth 指向 `localhost` 或 `127.0.0.1` 时启用；设置了 `DATABASE_URL` 后会自动跳过。需要在本地生产模式或 E2E 中强制使用内存模式时，可以设置 `STARX_USE_MEMORY_DB=true`，但它只在本地地址下生效。需要换本地密码时，可以用 `STARX_DEV_ADMIN_PASSWORD_HASH` 覆盖默认密码哈希。
+
+生产环境默认关闭匿名 OAuth 动态客户端注册；已登录用户仍可在应用接入页面登记应用。只有确实需要公开 `/api/auth/oauth2/register` 时，才设置 `STARX_ALLOW_DYNAMIC_CLIENT_REGISTRATION=true`。
 
 正式环境初始化第一个管理员时，先设置 `DATABASE_URL`、`STARX_FIRST_ADMIN_EMAIL` 和 `STARX_FIRST_ADMIN_PASSWORD`，再运行 `npm run db:seed-admin`。如果密码哈希由外部安全流程生成，也可以用 `STARX_FIRST_ADMIN_PASSWORD_HASH` 代替明文密码变量。
 
@@ -108,7 +118,7 @@ npm run test:e2e
 - 使用 `npm run db:seed-admin` 初始化首个管理员，完成后从部署环境移除 `STARX_FIRST_ADMIN_PASSWORD`。
 - 正式环境不要设置 `STARX_DEV_ADMIN_*` 变量。
 - 在各第三方平台配置回调地址。
-- 配置 `RESEND_API_KEY` 和 `EMAIL_FROM`，让邮件可以真实发出。
+- 配置 `RESEND_API_KEY` 或 SMTP，并设置 `EMAIL_FROM`，让认证邮件可以真实发出。
 - 连接码、第三方登录密钥和其他服务端密钥只放在服务端。
 - 定时运行 `npm run monitor:connection-codes`，把即将到期、长期未使用或接近限流上限的连接码接入告警。
 - 数据库备份、恢复、迁移和回滚步骤见 `docs/production-runbook.md`。

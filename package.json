@@ -12,6 +12,7 @@
     "db:migration:apply": "tsx scripts/better-auth-migration.ts --apply",
     "db:seed-admin": "tsx scripts/seed-first-admin.ts",
     "monitor:connection-codes": "tsx scripts/connection-code-monitor.ts",
+    "smoke:deployment": "tsx scripts/deployment-smoke.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed"
   },
@@ -23,6 +24,14 @@
     "@better-auth/scim": "^1.6.14",
     "@better-auth/sso": "^1.6.14",
     "@hookform/resolvers": "^5.4.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
+    "@opentelemetry/instrumentation-express": "^0.68.0",
+    "@opentelemetry/instrumentation-http": "^0.220.0",
+    "@opentelemetry/resources": "^2.9.0",
+    "@opentelemetry/sdk-node": "^0.220.0",
+    "@opentelemetry/sdk-trace-node": "^2.9.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
     "better-auth": "^1.6.14",
     "gsap": "^3.15.0",
     "input-otp": "^1.4.2",
@@ -38,6 +47,7 @@
     "react-qr-code": "^2.0.21",
     "resend": "^6.12.4",
     "sonner": "^2.0.7",
+    "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

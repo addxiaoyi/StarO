@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { MotionStage } from "@/components/motion/motion-stage";
 import Cubes from "@/components/react-bits/cubes";
+import { DotField } from "@/components/react-bits/dot-field";
 import { BrandMark } from "@/components/ui/brand-mark";
 
 type AuthShellProps = {
@@ -14,6 +15,17 @@ type AuthShellProps = {
 export function AuthShell({ title, description, children, footer }: AuthShellProps) {
   return (
     <main className="auth-canvas min-h-[100dvh]">
+      <DotField
+        aria-hidden="true"
+        className="auth-dot-field hidden lg:block"
+        dotRadius={1.4}
+        dotSpacing={18}
+        cursorRadius={420}
+        bulgeStrength={44}
+        glowColor="rgba(41,151,255,0.72)"
+        gradientFrom="rgba(96,165,250,0.24)"
+        gradientTo="rgba(255,255,255,0.16)"
+      />
       <MotionStage variant="auth" className="auth-content-stage">
         <div className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col gap-6 px-4 py-5 sm:gap-8 sm:px-6 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-center lg:gap-14 lg:px-8">
           <section className="relative min-h-[8.5rem] max-w-xl shrink-0 overflow-visible sm:min-h-[10rem] lg:min-h-0">

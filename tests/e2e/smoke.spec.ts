@@ -52,7 +52,7 @@ async function signInAdmin(page: Page) {
 test.describe("public smoke regression", () => {
   test("keeps current copy, layout, icon, and render health on public routes", async ({ page }) => {
     const routes = [
-      { path: "/", expected: "一个更容易用的账号中心。" },
+      { path: "/", expected: "你的账号" },
       { path: "/sign-up", expected: "创建账号" },
       { path: "/verify-email", expected: "确认邮箱" },
       { path: "/verify-email?token=test-token", expected: "确认邮箱" },
@@ -73,14 +73,14 @@ test.describe("public smoke regression", () => {
     const page = await context.newPage();
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "StarX-Oauth" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "创建账号" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "进入账号中心" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /你的账号\s*安全中心/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "开始使用" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "已有账号，登录" })).toBeVisible();
 
     const heroState = await page.evaluate(() => {
-      const feature = Array.from(document.querySelectorAll("h2")).find((el) => el.textContent?.includes("登录、安全、授权"));
+      const feature = Array.from(document.querySelectorAll("h2")).find((el) => el.textContent?.includes("多重验证"));
       const featureRect = feature?.getBoundingClientRect();
-      const cta = Array.from(document.querySelectorAll("a")).find((el) => el.textContent?.includes("创建账号"));
+      const cta = Array.from(document.querySelectorAll("a")).find((el) => el.textContent?.includes("开始使用"));
       const ctaRect = cta?.getBoundingClientRect();
 
       return {
@@ -98,12 +98,12 @@ test.describe("public smoke regression", () => {
 
   test("keeps the home hero and primary CTA above the fold on desktop", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "StarX-Oauth" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "创建账号" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /你的账号\s*安全中心/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: "开始使用" })).toBeVisible();
 
     const desktopHeroState = await page.evaluate(() => {
       const title = document.querySelector("h1");
-      const cta = Array.from(document.querySelectorAll("a")).find((el) => el.textContent?.includes("创建账号"));
+      const cta = Array.from(document.querySelectorAll("a")).find((el) => el.textContent?.includes("开始使用"));
       const titleRect = title?.getBoundingClientRect();
       const ctaRect = cta?.getBoundingClientRect();
 
@@ -127,7 +127,7 @@ test.describe("public smoke regression", () => {
     const page = await context.newPage();
 
     await page.goto("/");
-    await expect(page.locator("body")).toContainText("一个更容易用的账号中心。");
+    await expect(page.locator("body")).toContainText("你的账号");
 
     const before = await visibleBandState(page);
     await page.waitForTimeout(500);

@@ -25,12 +25,15 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npm run start -- -p ${port}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 180_000,
     env: {
+      BETTER_AUTH_SECRET: "starx-oauth-playwright-secret-0000000000000000",
       BETTER_AUTH_URL: baseURL,
+      DATABASE_URL: "",
       STARX_DEV_ADMIN_EMAIL: "local-admin@example.com",
       STARX_DEV_ADMIN_NAME: "本地管理员",
+      STARX_USE_MEMORY_DB: "true",
     },
   },
 });

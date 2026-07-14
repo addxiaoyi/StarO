@@ -16,8 +16,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
 }
 
 * {
@@ -37,7 +37,7 @@ body {
     linear-gradient(68deg, transparent 12%, rgba(41, 151, 255, 0.12) 36%, transparent 62%),
     linear-gradient(180deg, #0b0b0d 0%, #050505 52%, #000000 100%);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: 0;
 }
 

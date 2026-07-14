@@ -23,6 +23,9 @@ export function AppShell({ children }: AppShellProps) {
               <Link className="focus-ring shrink-0 rounded-full px-4 py-2 hover:bg-white/[0.07] hover:text-white" href="/admin">
                 成员管理
               </Link>
+              <Link className="focus-ring shrink-0 rounded-full px-4 py-2 hover:bg-white/[0.07] hover:text-white" href="/admin/audit-logs">
+                审计日志
+              </Link>
               <Link className="focus-ring shrink-0 rounded-full px-4 py-2 hover:bg-white/[0.07] hover:text-white" href="/applications">
                 应用接入
               </Link>

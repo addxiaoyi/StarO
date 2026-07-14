@@ -150,3 +150,10 @@ For OAuth/OpenID metadata, verify:
 - `/.well-known/openid-configuration` returns JSON.
 - `issuer` is `${BETTER_AUTH_URL}/api/auth` with the default Better Auth base path.
 - `authorization_endpoint` and `jwks_uri` point at `${BETTER_AUTH_URL}/api/auth/...`.
+
+Post-deploy automated smoke:
+
+```powershell
+$env:STARX_SMOKE_BASE_URL = "https://auth.star-web.top"
+npm run smoke:deployment
+```

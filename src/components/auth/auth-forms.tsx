@@ -60,20 +60,57 @@ export function SignInForm({ socialProviders = [] }: { socialProviders?: SocialP
   const feedback = useFeedback();
   const signInBusy = pending || Boolean(pendingAction);
 
+  // 邮箱格式验证
+  function isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // 防暴力破解：记录失败次数并延迟反馈
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const lastFailedTime = useRef<number>(0);
+
   function signInWithEmail(formData: FormData) {
     setPendingAction("password");
     startTransition(async () => {
       try {
-        const email = String(formData.get("email") || "");
+        const email = String(formData.get("email") || "").trim();
         const password = String(formData.get("password") || "");
+
+        // 前端输入验证
+        if (!email || !isValidEmail(email)) {
+          feedback.setError("请输入有效的邮箱地址");
+          return;
+        }
+        if (!password) {
+          feedback.setError("请输入密码");
+          return;
+        }
+
+        // 防暴力破解：连续失败后增加延迟
+        const now = Date.now();
+        const timeSinceLastFailure = now - lastFailedTime.current;
+        if (failedAttempts >= 3 && timeSinceLastFailure < 60000) {
+          const delay = Math.min(5000, 1000 * Math.pow(2, failedAttempts - 3));
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
         const client = starxAuthClient();
         const result = await client.signIn.email({ email, password });
 
         if (result?.error) {
+          // 记录失败次数
+          setFailedAttempts((prev) => {
+            const newCount = prev + 1;
+            lastFailedTime.current = Date.now();
+            return newCount;
+          });
           feedback.setError(toFriendlyAuthMessage(result.error.message, "登录失败，请检查信息后重试。"));
           return;
         }
 
+        // 登录成功，重置失败计数
+        setFailedAttempts(0);
+        lastFailedTime.current = 0;
         router.push(callbackURL);
       } finally {
         setPendingAction("");
@@ -307,6 +344,11 @@ export function ResetPasswordForm() {
     startTransition(async () => {
       try {
         const newPassword = String(formData.get("password") || "");
+        // 前端密码强度验证
+        if (!newPassword || newPassword.length < 8) {
+          feedback.setError("密码至少需要 8 位字符");
+          return;
+        }
         const client = starxAuthClient();
         const result = await client.resetPassword({
           token,

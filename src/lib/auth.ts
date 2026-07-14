@@ -2,14 +2,21 @@ import { memoryAdapter } from "@better-auth/memory-adapter";
 import { getAuthTables } from "@better-auth/core/db";
 import { Pool } from "pg";
 import { betterAuth } from "better-auth";
-import { DEFAULT_CALLBACK_URL, getBaseUrl, validateEnvironment } from "@/lib/app-config";
+import {
+  DEFAULT_CALLBACK_URL,
+  getBaseUrl,
+  isLocalTestMemoryDatabaseEnabled,
+  isProductionBuildPhase,
+  validateEnvironment,
+} from "@/lib/app-config";
 import {
   createAuthOptions,
   DEVELOPMENT_ADMIN_ACCOUNT_RECORD_ID,
   getDevelopmentAdminSeed,
 } from "@/lib/auth-options";
+import { dbPoolConfig } from "@/lib/db-config";
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && !isProductionBuildPhase()) {
   const validation = validateEnvironment();
   if (!validation.isValid) {
     console.error("[StarX-OAuth] 环境配置错误:");
@@ -135,10 +142,24 @@ function getMemoryDatabase(options: Record<string, unknown>) {
 }
 
 function getDatabase(options: Record<string, unknown>) {
+  if (isLocalTestMemoryDatabaseEnabled()) {
+    return getMemoryDatabase(options);
+  }
+
   if (process.env.DATABASE_URL) {
     if (!pgPool) {
       pgPool = new Pool({
         connectionString: process.env.DATABASE_URL,
+        ...dbPoolConfig,
+        // 强制 UTF8，避免数据库/客户端字符集不一致
+        client_encoding: "utf8",
+        // 应用名称便于日志追踪
+        application_name: process.env.OTEL_SERVICE_NAME || "starx-oauth",
+      });
+
+      // 监听连接池错误，避免进程崩溃
+      pgPool.on("error", (err) => {
+        console.error("[db-pool] idle client error", err);
       });
     }
 

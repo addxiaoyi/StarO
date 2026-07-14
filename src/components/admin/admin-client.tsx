@@ -1,12 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, Loader2, RefreshCw, Search, ShieldAlert, ShieldCheck, UserPlus, Users, X } from "lucide-react";
+import { CheckCircle2, Loader2, RefreshCw, Search, ShieldAlert, ShieldCheck, UserPlus, Users, X, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { TextField } from "@/components/ui/text-field";
 import { starxAuthClient } from "@/lib/auth-client";
 import { toFriendlyAuthMessage } from "@/lib/friendly-auth-copy";
+import {
+  validatePasswordStrength,
+  getPasswordStrengthLabel,
+  DEFAULT_PASSWORD_POLICY,
+} from "@/lib/password-policy";
 
 const USER_LIST_LIMIT = 20;
 
@@ -48,6 +53,66 @@ export function AdminClient() {
   const [listError, setListError] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // 密码生成与显示逻辑
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState<{ score: number; label: string; color: string }>({ score: 0, label: "", color: "" });
+
+  function generatePassword() {
+    const chars = {
+      lowercase: "abcdefghijkmnpqrstuvwxyz",
+      uppercase: "ABCDEFGHJKLMNPQRSTUVWXYZ",
+      digits: "23456789",
+      specials: DEFAULT_PASSWORD_POLICY.specialChars,
+    };
+
+    const getRandomChar = (pool: string) => {
+      const idx = Math.floor(Math.random() * pool.length);
+      return pool[idx];
+    };
+
+    // 确保每类字符至少有一个
+    const result = [
+      getRandomChar(chars.lowercase),
+      getRandomChar(chars.uppercase),
+      getRandomChar(chars.digits),
+      getRandomChar(chars.specials),
+    ];
+
+    // 剩余长度随机填充 (最少 8 位)
+    const targetLength = DEFAULT_PASSWORD_POLICY.minLength + Math.floor(Math.random() * 4);
+    const allChars = chars.lowercase + chars.uppercase + chars.digits + chars.specials;
+    for (let i = 4; i < targetLength; i++) {
+      result.push(getRandomChar(allChars));
+    }
+
+    // Fisher-Yates 打乱
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result.join("");
+  }
+
+  function handleGeneratePassword() {
+    const newPassword = generatePassword();
+    setGeneratedPassword(newPassword);
+    const result = validatePasswordStrength(newPassword);
+    setPasswordStrength({ score: result.score, ...getPasswordStrengthLabel(result.score) });
+  }
+
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    if (value.length > 0) {
+      const result = validatePasswordStrength(value);
+      setPasswordStrength({ score: result.score, ...getPasswordStrengthLabel(result.score) });
+    } else {
+      setPasswordStrength({ score: 0, label: "", color: "" });
+    }
+    setGeneratedPassword(value);
+  }
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) || null,
@@ -321,7 +386,64 @@ export function AdminClient() {
         <form onSubmit={(event) => submitForm(event, createUser)} className="grid gap-3">
           <TextField label="姓名" name="name" placeholder="成员姓名" required />
           <TextField label="邮箱" name="email" type="email" placeholder="admin@example.com" required />
-          <TextField label="密码" name="password" type="password" placeholder="至少 8 位" minLength={8} required />
+
+          {/* 密码输入区域 */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  id="password-input"
+                  placeholder="至少 8 位，包含大小写、数字、特殊字符"
+                  minLength={8}
+                  required
+                  value={generatedPassword}
+                  onChange={handlePasswordChange}
+                  className="focus-ring h-12 w-full rounded-2xl border border-white/12 bg-black/35 px-4 pr-10 text-base text-white transition placeholder:text-zinc-500 focus:border-sky-300/70"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                className="flex h-12 items-center gap-2 rounded-2xl border border-white/12 bg-white/5 px-4 text-sm text-zinc-300 transition hover:bg-white/10"
+              >
+                <KeyRound size={16} />
+                生成
+              </button>
+            </div>
+
+            {/* 密码强度指示器 */}
+            {passwordStrength.score > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-500">密码强度</span>
+                  <span className={passwordStrength.color}>{passwordStrength.label}</span>
+                </div>
+                <div className="flex h-1 gap-1">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-full flex-1 rounded-full transition-colors ${
+                        level <= passwordStrength.score
+                          ? passwordStrength.color.replace("text-", "bg-")
+                          : "bg-white/10"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <label className="grid gap-2 text-sm text-zinc-200">
             <span className="font-medium">成员身份</span>
             <select name="role" className={fieldClass} defaultValue="user">
