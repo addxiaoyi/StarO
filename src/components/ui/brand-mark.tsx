@@ -4,18 +4,23 @@ export function BrandMark({ dark = false }: { dark?: boolean }) {
   return (
     <Link href="/" className="focus-ring inline-flex items-center gap-3 group">
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <circle cx="16" cy="16" r="13" stroke={dark ? "#3b82f6" : "#60a5fa"} strokeWidth="1" fill="none" opacity={dark ? 0.8 : 0.6} />
-        <circle cx="16" cy="16" r="9" fill="url(#brand-grad)" />
-        <circle cx="13" cy="13" r="2" fill="white" fillOpacity="0.35" />
+        <circle cx="16" cy="16" r="14" fill="url(#brand-x-bg)" />
+        <path
+          d="M11 11L21 21M21 11L11 21"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         <defs>
-          <radialGradient id="brand-grad" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </radialGradient>
+          <linearGradient id="brand-x-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#8b5cf6" />
+          </linearGradient>
         </defs>
       </svg>
       <span className={`text-[14px] font-medium tracking-wider ${dark ? "text-gray-900" : "text-white"}`}>
-        StarX
+        X
       </span>
     </Link>
   );

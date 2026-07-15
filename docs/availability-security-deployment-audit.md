@@ -1,4 +1,4 @@
-# StarX-Oauth Availability, Security, and Deployment Audit
+# X-Oauth Availability, Security, and Deployment Audit
 
 Date: 2026-07-07
 Scope: `starx-oauth` Next.js / Better Auth application inside `D:\qwq\项目\auth-star`.

@@ -146,7 +146,7 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
           body: "点击下方按钮确认这是你的邮箱，之后就可以登录账号中心。",
           actionLabel: "确认邮箱",
           actionUrl: url,
-          note: "如果你没有创建或登录 StarX-Oauth 账号，可以忽略这封邮件。",
+          note: "如果你没有创建或登录 X-Oauth 账号，可以忽略这封邮件。",
         });
       },
     },
@@ -246,7 +246,7 @@ export function createAuthOptions(input: CreateAuthOptionsInput = {}): BetterAut
         async sendMagicLink({ email, url }) {
           await sendAuthEmail({
             to: email,
-            subject: "继续登录 StarX-Oauth",
+            subject: "继续登录 X-Oauth",
             title: "继续登录",
             body: "点击下方按钮完成本次登录。不要把这封邮件转发给别人。",
             actionLabel: "继续登录",

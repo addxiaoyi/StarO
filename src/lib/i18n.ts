@@ -1,5 +1,5 @@
 /**
- * Internationalization (i18n) support for StarX-Oauth
+ * Internationalization (i18n) support for X-Oauth
  *
  * Currently supports: Chinese (zh-CN), English (en)
  * Messages are grouped by domain for maintainability

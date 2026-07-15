@@ -1,4 +1,4 @@
-# StarX-Oauth Release Review Draft
+# X-Oauth Release Review Draft
 
 This draft is a reviewer-facing map for the current local changes. It groups the work into coherent commit slices, gives a PR description, and lists the verification evidence that should travel with the release.
 
@@ -6,7 +6,7 @@ This draft is a reviewer-facing map for the current local changes. It groups the
 
 1. Rebuild product shell and ordinary-user auth pages
    - Files: `src/app/page.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, `src/app/sign-in`, `src/app/sign-up`, `src/app/forgot-password`, `src/app/reset-password`, `src/app/two-factor`, `src/app/verify-email`, `src/components/auth`, `src/components/motion`, `src/components/ui`.
-   - Scope: StarX-Oauth branding, ordinary-user copy, reduced-motion-safe GSAP motion, current email-confirmation wording, and shared UI primitives.
+   - Scope: X-Oauth branding, ordinary-user copy, reduced-motion-safe GSAP motion, current email-confirmation wording, and shared UI primitives.
 
 2. Add Better Auth runtime, email, and protected account flows
    - Files: `src/app/api/auth`, `src/lib/auth.ts`, `src/lib/auth-options.ts`, `src/lib/auth-client.ts`, `src/lib/email.ts`, `src/lib/friendly-auth-copy.ts`, `src/lib/app-config.ts`, `src/types/pg.d.ts`.
@@ -34,11 +34,11 @@ This draft is a reviewer-facing map for the current local changes. It groups the
 
 ## PR Title
 
-Complete StarX-Oauth account center, production governance, and OAuth metadata verification
+Complete X-Oauth account center, production governance, and OAuth metadata verification
 
 ## PR Summary
 
-This change turns the starter app into a complete StarX-Oauth account center built on Next.js App Router and Better Auth. It adds the public auth pages, signed-in account center, member management, application access management, OAuth consent helper pages, production database scripts, connection-code monitoring, OAuth/OpenID discovery metadata, and browser regression coverage.
+This change turns the starter app into a complete X-Oauth account center built on Next.js App Router and Better Auth. It adds the public auth pages, signed-in account center, member management, application access management, OAuth consent helper pages, production database scripts, connection-code monitoring, OAuth/OpenID discovery metadata, and browser regression coverage.
 
 The UI copy now uses the current ordinary-user wording, including `确认邮箱`/`确认邮件` language, and the old technical or star/spark themed markers are covered by source and browser checks. Local development can run without `DATABASE_URL` through a memory adapter and optional local admin seed, while production has documented PostgreSQL migration, backup, rollback, first-admin seed, and monitoring steps.
 

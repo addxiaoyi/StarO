@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import type { FormEvent } from "react";
-import { CalendarClock, Check, Copy, Fingerprint, KeyRound, Loader2, LogOut, Power, RefreshCw, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
+import { CalendarClock, Check, Copy, Fingerprint, Globe, KeyRound, Loader2, LogOut, Power, RefreshCw, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -26,7 +26,16 @@ type TwoFactorSetup = {
   backupCodes: string[];
 };
 
-type DashboardAction =
+// 会话扩展信息（用于风险检测/状态切换）
+interface SessionExtraInfo {
+  riskLevel?: "none" | "low" | "medium" | "high";
+  riskAdvice?: string;
+  canToggle?: boolean;
+}
+
+const SessionInfo = SessionInfo & SessionExtraInfo;
+
+export function DashboardClient({ user }: DashboardClientProps) {
   | "sign-out"
   | "passkey"
   | "enable-2fa"
@@ -37,6 +46,7 @@ type DashboardAction =
   | `api-key-toggle:${string}`
   | `api-key-extend:${string}`
   | "sessions"
+  | `session-revoke:${string}`
   | "";
 
 export function DashboardClient({ user }: DashboardClientProps) {
@@ -48,6 +58,8 @@ export function DashboardClient({ user }: DashboardClientProps) {
   const [connectionKeys, setConnectionKeys] = useState<ApiKeyRecord[]>([]);
   const [connectionKeyTotal, setConnectionKeyTotal] = useState(0);
   const [connectionKeysLoading, setConnectionKeysLoading] = useState(true);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(user.twoFactorEnabled));
   const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetup | null>(null);
@@ -106,13 +118,33 @@ export function DashboardClient({ user }: DashboardClientProps) {
     }
   }, [showError]);
 
+  const loadSessions = useCallback(async () => {
+    setSessionsLoading(true);
+
+    try {
+      const client = starxAuthClient();
+      const result = await client.admin.getUserSessions({
+        query: { limit: 20, offset: 0 },
+      });
+
+      if (result?.data) {
+        setSessions(result.data.sessions || []);
+      }
+    } catch {
+      showError("会话列表暂时无法加载，请稍后再试。");
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, [showError]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadConnectionKeys();
+      void loadSessions();
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [loadConnectionKeys]);
+  }, [loadConnectionKeys, loadSessions]);
 
   function report(ok: string, bad = "操作没有成功，请稍后再试。") {
     return {
@@ -199,7 +231,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
     setPendingAction("api-key");
     startTransition(async () => {
       try {
-        const name = String(formData.get("name") || "StarX 集成");
+        const name = String(formData.get("name") || "X 集成");
         const expiresIn = apiKeyExpiresIn(formData.get("expiresIn"));
         const client = starxAuthClient();
         const result = await client.apiKey.create({
@@ -297,7 +329,33 @@ export function DashboardClient({ user }: DashboardClientProps) {
         const result = await client.revokeOtherSessions({}, { ...report("其他设备已退出账号。", "现在不能让其他设备退出，请稍后再试。") });
         if (result?.error) {
           showError(toFriendlyAuthMessage(result.error.message, "现在不能让其他设备退出，请稍后再试。"));
+        } else {
+          await loadSessions();
         }
+      } finally {
+        setPendingAction("");
+      }
+    });
+  }
+
+  function revokeSession(sessionId: string) {
+    setPendingAction(`session-revoke:${sessionId}`);
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/auth/session/revoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to revoke session");
+        }
+
+        await loadSessions();
+        showMessage("该设备会话已退出。");
+      } catch {
+        showError("会话退出失败，请稍后再试。");
       } finally {
         setPendingAction("");
       }
@@ -504,13 +562,32 @@ export function DashboardClient({ user }: DashboardClientProps) {
             <div className="inline-flex rounded-2xl bg-white/8 p-3 text-white">
               <Smartphone size={20} />
             </div>
-            <h2 className="mt-4 text-xl font-semibold text-white">其他已登录设备</h2>
-            <p className="mt-1 text-sm leading-6 text-zinc-500">需要时，可以让其他设备退出账号，当前设备会保留。</p>
+            <h2 className="mt-4 text-xl font-semibold text-white">已登录设备</h2>
+            <p className="mt-1 text-sm leading-6 text-zinc-500">查看所有登录设备的会话，可以单独退出某个设备。</p>
           </div>
           <Button type="button" variant="secondary" onClick={revokeOtherSessions} disabled={dashboardBusy} aria-busy={actionPending("sessions")}>
             {actionPending("sessions") ? <Loader2 className="animate-spin" size={17} /> : <Smartphone size={17} />}
             {actionPending("sessions") ? "正在处理..." : "让其他设备退出"}
           </Button>
+        </div>
+
+        <div className="mt-5 grid gap-3" aria-busy={sessionsLoading}>
+          {!sessionsLoading && sessions.length === 0 ? (
+            <div className="rounded-2xl border border-white/12 bg-black/25 px-4 py-5 text-sm text-zinc-400" role="status">
+              <div className="font-semibold text-zinc-200">暂无登录记录</div>
+              <div className="mt-1 leading-6">登录后会在此处显示设备信息。</div>
+            </div>
+          ) : null}
+
+          {sessions.map((session) => (
+            <SessionRow
+              key={session.id}
+              session={session}
+              busy={dashboardBusy}
+              pendingAction={pendingAction}
+              onRevoke={revokeSession}
+            />
+          ))}
         </div>
       </section>
 
@@ -627,6 +704,125 @@ function ConnectionKeyRow({
       </div>
     </article>
   );
+}
+
+function SessionRow({
+  session,
+  busy,
+  pendingAction,
+  onRevoke,
+}: {
+  session: SessionInfo;
+  busy: boolean;
+  pendingAction: DashboardAction;
+  onRevoke: (sessionId: string) => void;
+}) {
+  const { browser, os, device } = session.userAgent
+    ? parseDeviceInfo(session.userAgent)
+    : { browser: "Unknown", os: "Unknown", device: "Desktop" };
+
+  const isExpired = session.expiresAt ? isPastDate(session.expiresAt) : false;
+  const isCurrentSession = false; // 实际应该通过 API 获取当前会话 ID 判断
+
+  return (
+    <article className="rounded-2xl border border-white/12 bg-black/25 p-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate text-base font-semibold text-white">
+              {device === "Mobile" ? "📱" : "💻"} {browser} on {os}
+            </h3>
+            {isCurrentSession && <StatusPill label="当前设备" tone="ok" />}
+            {isExpired && <StatusPill label="已过期" tone="warn" />}
+          </div>
+          <div className="mt-2 grid gap-2 text-sm text-zinc-500 sm:grid-cols-2">
+            <p className="flex min-w-0 items-center gap-2">
+              <Smartphone size={15} />
+              <span className="truncate">设备类型：{device}</span>
+            </p>
+            <p className="flex min-w-0 items-center gap-2">
+              <CalendarClock size={15} />
+              <span className="truncate">登录时间：{formatDateTime(session.createdAt) || "未知"}</span>
+            </p>
+            <p className="flex min-w-0 items-center gap-2">
+              <RefreshCw size={15} />
+              <span className="truncate">最近活动：{formatDateTime(session.updatedAt) || "未知"}</span>
+            </p>
+            {session.ipAddress && (
+              <p className="flex min-w-0 items-center gap-2">
+                <Globe size={15} />
+                <span className="truncate">IP：{session.ipAddress}</span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          {!isCurrentSession && (
+            <Button
+              type="button"
+              variant="danger"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm("确认让该设备退出登录吗？")) {
+                  onRevoke(session.id);
+                }
+              }}
+            >
+              {pendingAction === `session-revoke:${session.id}` ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <LogOut size={16} />
+              )}
+              {pendingAction === `session-revoke:${session.id}` ? "正在退出..." : "退出该设备"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function parseDeviceInfo(userAgent: string): { browser: string; os: string; device: string } {
+  const browserPatterns = [
+    { name: "Chrome", pattern: /Chrome\/(\d+)/ },
+    { name: "Firefox", pattern: /Firefox\/(\d+)/ },
+    { name: "Safari", pattern: /Version\/(\d+).*Safari/ },
+    { name: "Edge", pattern: /Edg\/(\d+)/ },
+    { name: "Opera", pattern: /OPR\/(\d+)/ },
+  ];
+
+  const osPatterns = [
+    { name: "Windows", pattern: /Windows NT (\d+\.\d+)/ },
+    { name: "macOS", pattern: /Mac OS X (\d+[._]\d+)/ },
+    { name: "Linux", pattern: /Linux/ },
+    { name: "iOS", pattern: /iPhone.*OS (\d+[._]\d+)/ },
+    { name: "Android", pattern: /Android (\d+)/ },
+  ];
+
+  let browser = "Unknown Browser";
+  let os = "Unknown OS";
+
+  for (const { name, pattern } of browserPatterns) {
+    if (pattern.test(userAgent)) {
+      const match = userAgent.match(pattern);
+      browser = match ? `${name} ${match[1]}` : name;
+      break;
+    }
+  }
+
+  for (const { name, pattern } of osPatterns) {
+    if (pattern.test(userAgent)) {
+      const match = userAgent.match(pattern);
+      os = match ? `${name} ${match[1].replace(/_/g, ".")}` : name;
+      break;
+    }
+  }
+
+  const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent);
+  const device = isMobile ? "Mobile" : "Desktop";
+
+  return { browser, os, device };
 }
 
 function apiKeyExpiresIn(value: FormDataEntryValue | null) {

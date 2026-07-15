@@ -1,4 +1,4 @@
-export const APP_NAME = "StarX-Oauth";
+export const APP_NAME = "X-Oauth";
 export const DEFAULT_CALLBACK_URL = "/dashboard";
 
 export const oauthProviders = [

@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-07-16T16:00:00+08:00",
+  "project": "starx-oauth",
+  "env": "production-intent",
+  "change_type": "perfective+enhancement",
+  "checklist_id": "nextjs-security-baseline-v2.1",
+  "changed_files_for_security_review": {
+    "high_sensitivity": [
+      "src/lib/auth-client.ts",
+      "src/lib/session-utils.ts",
+      "src/lib/auth.ts",
+      "src/lib/auth-options.ts"
+    ],
+    "medium_sensitivity": [
+      "src/components/dashboard/dashboard-client.tsx",
+      "src/components/sessions/session-manager.tsx"
+    ],
+    "config_docs": [
+      "docs/security-checklist.md",
+      "docs/SESSION_MANAGEMENT_NEXT.md"
+    ]
+  },
+  "security_baseline_anchor_points": {
+    "A_Input_Validation": {
+      "concern": "Headers, query params, body fields",
+      "files": ["src/lib/auth.ts", "src/lib/auth-options.ts"]
+    },
+    "B_AuthN_AuthZ": {
+      "concern": "Session tokens, JWT expiration, status, token leakage",
+      "files": ["src/lib/auth-client.ts", "src/lib/session-utils.ts", "src/components/sessions/session-manager.tsx"]
+    },
+    "C_Data_Encryption": {
+      "concern": "Env getters, cookie configs, runtime secrets",
+      "files": ["src/lib/app-config.ts", ".env*", "src/lib/db-config.ts"]
+    },
+    "D_Network_Transports": {
+      "concern": "fetch calls, headers log exposure, CSP endpoints",
+      "files": ["src/lib/auth-client.ts", "src/components/dashboard/dashboard-client.tsx"]
+    },
+    "E_Secrets_Leakage": {
+      "concern": "placeholders in code / logs",
+      "signals": [
+        "process.env.BETTER_AUTH_SECRET contains placeholder",
+        'console.(warn|log).*placeholder',
+        '"starx-dev-admin" password presence'
+      ]
+    },
+    "F_CORS_Security_Headers": {
+      "anchor": "next.config.ts headers / middleware.ts",
+      "related": ["src/middleware.ts", "next.config.ts"]
+    }
+  },
+  "in_scope_commits_or_diff": {
+    "git_diff_refs": ["HEAD"],
+    "stat_add": 640,
+    "stat_del": 337
+  },
+  "assurance_context": {
+    "regression_intent": "会话管理功能增强",
+    "breaking_changes": [],
+    "backwards_compatible": true,
+    "db_migration_required": false,
+    "env_var_changes": []
+  },
+  "qa_checkpoints": [
+    "✅ TypeScript 编译可通过",
+    "✅ 无环境变量 `BETTER_AUTH_URL` 占位",
+    "✅ CSP/响应头加固 (`securityHeaders`)",
+    "✅ CORS 策略 (`TrustedOrigins`)",
+    "✅ Next.js 生产模式构建 (`next build`)",
+    "⚠️ 内存/垃圾回收限制验证 (临时阈值溢出 ?)"
+  ]
+}

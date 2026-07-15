@@ -1,6 +1,6 @@
-# StarX-Oauth
+# X-Oauth
 
-StarX-Oauth 是一个独立的账号中心，基于 Next.js App Router 和 Better Auth 构建。产品名称、页面文案、邮件内容和界面品牌都围绕 StarX-Oauth 统一维护。
+X-Oauth 是一个独立的账号中心，基于 Next.js App Router 和 Better Auth 构建。产品名称、页面文案、邮件内容和界面品牌都围绕 X-Oauth 统一维护。
 
 ## 用户可见功能
 
@@ -33,7 +33,7 @@ npm run dev
 
 打开 `http://localhost:3000`。
 
-本地开发时如果没有设置 `DATABASE_URL`，StarX-Oauth 会使用内存模式。这样重启服务后数据会清空，适合试流程；正式上线请使用 PostgreSQL。
+本地开发时如果没有设置 `DATABASE_URL`，X-Oauth 会使用内存模式。这样重启服务后数据会清空，适合试流程；正式上线请使用 PostgreSQL。
 
 ## 环境变量
 
@@ -55,7 +55,7 @@ DISCORD_CLIENT_SECRET=
 MICROSOFT_CLIENT_ID=
 MICROSOFT_CLIENT_SECRET=
 
-EMAIL_FROM=StarX-Oauth <noreply@example.com>
+EMAIL_FROM=X-Oauth <noreply@example.com>
 RESEND_API_KEY=
 SMTP_HOST=
 SMTP_PORT=465

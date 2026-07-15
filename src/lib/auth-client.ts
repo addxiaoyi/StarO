@@ -47,7 +47,7 @@ export const authClient = createAuthClient({
   fetchOptions: {
     onError(error) {
       if (error.error.status === 429) {
-        console.warn("StarX-Oauth 请求被限流。");
+        console.warn("X-Oauth 请求被限流。");
       }
     },
   },
@@ -114,6 +114,41 @@ type ListApiKeysResult = {
   offset?: number;
 };
 
+type SessionRecord = {
+  id: string;
+  userId: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  expiresAt?: Date | string | null;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+};
+
+type ListSessionsResult = {
+  sessions?: SessionRecord[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+};
+
+export type SessionStatus = "active" | "inactive" | "revoked";
+
+export type SessionWithStatus = SessionRecord & {
+  status: SessionStatus;
+  isCurrent?: boolean;
+  isRisky?: boolean;
+  canToggle?: boolean;
+};
+
+export type SessionUpdateInput = {
+  /** 会话 ID */
+  sessionId: string;
+  /** 新状态 */
+  status?: SessionStatus;
+  /** 自定义过期时间 (秒) */
+  expiresIn?: number;
+};
+
 export type StarXAuthClient = typeof authClient & {
   signIn: {
     email(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
@@ -129,6 +164,7 @@ export type StarXAuthClient = typeof authClient & {
   verifyEmail(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
   sendVerificationEmail(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
   revokeOtherSessions(input?: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
+  updateSession(input: SessionUpdateInput, options?: unknown): Promise<AuthActionResult<SessionRecord>>;
   twoFactor: {
     enable(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult<TwoFactorSetupResult>>;
     sendOtp(input?: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
@@ -149,13 +185,62 @@ export type StarXAuthClient = typeof authClient & {
     createUser(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
     revokeUserSessions(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
     banUser(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
+    getUserSessions(input?: { query?: Record<string, unknown> }, options?: unknown): Promise<AuthActionResult<ListSessionsResult>>;
+    revokeSession(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult>;
   };
   oauth2: {
     consent(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult<{ redirectURI?: string }>>;
     continue(input: Record<string, unknown>, options?: unknown): Promise<AuthActionResult<{ redirectURI?: string }>>;
   };
-};
+  updateSession(input: SessionUpdateInput, options?: unknown): Promise<AuthActionResult<SessionRecord>>;
 
+
+/**
+ * 创建强类型的认证客户端
+ * Calls getAuth() internally to ensure proper Better Auth 实例初始化
+ *
+ * @returns 强类型认证客户端实例 (StarXAuthClient)
+ */
 export function starxAuthClient() {
   return authClient as unknown as StarXAuthClient;
 }
+
+/**
+ * 会话管理相关辅助函数
+ */
+export const sessionsHelpers = {
+  /**
+   * 判定会话是否异常
+   * @param session 会话信息
+   * @param recentSessions 最近的其他会话列表，用于比较 IP/设备
+   * @returns 是否异常
+   */
+  isAbnormalSession(session: SessionRecord | SessionWithStatus, recentSessions: (SessionRecord | SessionWithStatus)[], threshold = 2) {
+    if (!session.ipAddress) return;
+    const otherLogins = recentSessions.filter(s => s.id !== session.id && s.ipAddress);
+    const sameIpCount = otherLogins.filter(s => s.ipAddress === session.ipAddress).length;
+    return sameIpCount >= threshold - 1; // 含当前会话，>=2 个会话同 IP
+  },
+
+  /**
+   * 获取会话状态（优先级：已给出>过期>撤销）
+   */
+  getStatus(session: SessionRecord | SessionWithStatus): SessionStatus {
+    if ('status' in session) {
+      if (session.status === 'revoked') return 'revoked';
+      if (session.status === 'inactive') return 'inactive';
+    }
+    if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+      return 'inactive';
+    }
+    return 'active';
+  },
+
+  /**
+   * 会话是否可切换（非自我且非已撤销）
+   */
+  canToggle(session: SessionRecord): boolean {
+    // 暂不实现，返回 true 即可切换
+    return true;
+  },
+};

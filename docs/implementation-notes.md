@@ -1,8 +1,8 @@
-# StarX-Oauth Implementation Notes
+# X-Oauth Implementation Notes
 
 ## Scope
 
-StarX-Oauth is an independent Next.js App Router authentication center. The first version focuses on account creation, sign-in, protected account surfaces, administrator controls, OAuth consent surfaces, and reusable auth APIs for future projects.
+X-Oauth is an independent Next.js App Router authentication center. The first version focuses on account creation, sign-in, protected account surfaces, administrator controls, OAuth consent surfaces, and reusable auth APIs for future projects.
 
 ## Current State Reading Guide
 
@@ -28,7 +28,7 @@ StarX-Oauth is an independent Next.js App Router authentication center. The firs
 
 ## Brand Rules
 
-- Product name, developer name, metadata, email copy, README, and UI chrome use `StarX-Oauth`.
+- Product name, developer name, metadata, email copy, README, and UI chrome use `X-Oauth`.
 - Template project promotion, deploy buttons, default generated assets, and old maintainer branding are intentionally removed.
 - Third-party names are allowed only as dependency names, provider names, imports, or technical integration notes.
 - Brand visuals avoid star/sparkle and AI-assistant motifs. Use account-security cues such as shields, locks, devices, and member icons for user-facing surfaces.
@@ -741,15 +741,15 @@ Manual flow checks still needed when real credentials are available:
   - subject: `请完成邮箱验证`
   - title: `完成邮箱验证`
   - action: `完成验证`
-  - safety note: `如果你没有创建或登录 StarX-Oauth 账号，可以忽略这封邮件。`
+  - safety note: `如果你没有创建或登录 X-Oauth 账号，可以忽略这封邮件。`
 - Password recovery email copy now uses:
   - subject: `找回你的登录密码`
   - title: `设置新的登录密码`
   - action: `设置新密码`
   - safety note: `如果不是你发起的找回密码请求，可以忽略这封邮件。`
 - Magic-link email copy now uses:
-  - subject: `用这封邮件登录 StarX-Oauth`
-  - title: `继续登录 StarX-Oauth`
+  - subject: `用这封邮件登录 X-Oauth`
+  - title: `继续登录 X-Oauth`
   - body guidance that the email is for this login only and should not be forwarded.
 - Email verification OTP and 2FA email OTP copy now explains where to enter the 6-digit code instead of only saying `请输入这个验证码`.
 - Organization invitation email now says `加入组织邀请` and asks the recipient to view the invitation and decide whether to join.
@@ -1348,7 +1348,7 @@ Manual flow checks still needed when real credentials are available:
   - `完成验证` became `确认邮箱`.
 - Password reset and login email copy changes:
   - The reset email now says `点击下方按钮设置新的登录密码。`
-  - `用这封邮件登录 StarX-Oauth` became `继续登录 StarX-Oauth`.
+  - `用这封邮件登录 X-Oauth` became `继续登录 X-Oauth`.
   - The magic-link title now says `继续登录`, and the body uses `完成本次登录` plus a clearer warning not to forward the email.
 - 6-digit email copy changes:
   - `你的邮箱确认数字` became `你的邮箱验证数字`.
@@ -1665,7 +1665,7 @@ Manual flow checks still needed when real credentials are available:
   - certificate path: `/etc/letsencrypt/live/auth.star-web.top/fullchain.pem`
   - observed expiry: `2026-09-13`
 - Public verification on `2026-06-15` confirmed:
-  - `https://auth.star-web.top/` returned the `StarX-Oauth` home page
+  - `https://auth.star-web.top/` returned the `X-Oauth` home page
   - `https://auth.star-web.top/sign-in` returned HTTP 200 and the current sign-in shell
   - `https://auth.star-web.top/.well-known/openid-configuration` returned JSON with issuer `https://auth.star-web.top/api/auth`
 - Production caveat still open after deployment:

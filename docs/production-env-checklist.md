@@ -12,7 +12,7 @@ Production origin: `https://auth.star-web.top`
 | `BETTER_AUTH_SECRET` | Long random secret, at least 32 characters; generate with `openssl rand -hex 32`. | Values like `change-me`, Chinese placeholder text, or short demo strings are rejected by the app. |
 | `BETTER_AUTH_URL` | `https://auth.star-web.top` | Localhost, example domains, or malformed URLs break issuer/callback metadata. |
 | `DATABASE_URL` | PostgreSQL URL with the production database host, database, user, and password. | `postgresql://用户名...`, `example`, empty strings, or memory DB values are rejected in production runtime. |
-| `EMAIL_FROM` | Verified sender, for example `StarX-Oauth <noreply@star-web.top>`. | Blank or unverified senders can make sign-in/reset email delivery fail even when SMTP/API credentials exist. |
+| `EMAIL_FROM` | Verified sender, for example `X-Oauth <noreply@star-web.top>`. | Blank or unverified senders can make sign-in/reset email delivery fail even when SMTP/API credentials exist. |
 | `RESEND_API_KEY` or `SMTP_HOST` | At least one real email transport must be configured. | Empty `RESEND_API_KEY=` or placeholder SMTP host leaves auth email flows unusable. |
 
 ## Email Transport Options

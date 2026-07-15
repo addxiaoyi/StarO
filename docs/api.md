@@ -1,6 +1,6 @@
-# StarX-Oauth API 文档
+# X-Oauth API 文档
 
-本文档说明 StarX-Oauth 提供的认证 API 和 OAuth 接口。
+本文档说明 X-Oauth 提供的认证 API 和 OAuth 接口。
 
 ## 基础信息
 

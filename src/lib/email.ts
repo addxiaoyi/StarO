@@ -87,7 +87,7 @@ async function sendViaResend(
     });
     return true;
   } catch (error) {
-    console.error("[StarX-Oauth] Resend 发送失败:", error);
+    console.error("[X-Oauth] Resend 发送失败:", error);
     return false;
   }
 }
@@ -111,13 +111,13 @@ async function sendViaSmtp(
     });
     return true;
   } catch (error) {
-    console.error("[StarX-Oauth] SMTP 发送失败:", error);
+    console.error("[X-Oauth] SMTP 发送失败:", error);
     return false;
   }
 }
 
 export async function sendAuthEmail(message: AuthEmail) {
-  const from = process.env.EMAIL_FROM || "StarX-Oauth <noreply@localhost>";
+  const from = process.env.EMAIL_FROM || "X-Oauth <noreply@localhost>";
   const text = [
     message.title,
     "",
@@ -166,21 +166,21 @@ export async function sendAuthEmail(message: AuthEmail) {
   if (process.env.RESEND_API_KEY) {
     const sent = await sendViaResend(from, message, html, text);
     if (sent) {
-      console.info("[StarX-Oauth email] 已通过 Resend 发送");
+      console.info("[X-Oauth email] 已通过 Resend 发送");
       return;
     }
-    console.warn("[StarX-Oauth] Resend 发送失败，尝试 SMTP...");
+    console.warn("[X-Oauth] Resend 发送失败，尝试 SMTP...");
   }
 
   if (process.env.SMTP_HOST) {
     const sent = await sendViaSmtp(from, message, html, text);
     if (sent) {
-      console.info("[StarX-Oauth email] 已通过 SMTP 发送");
+      console.info("[X-Oauth email] 已通过 SMTP 发送");
       return;
     }
-    console.warn("[StarX-Oauth] SMTP 发送失败，保存到本地...");
+    console.warn("[X-Oauth] SMTP 发送失败，保存到本地...");
   }
 
-  console.info("[StarX-Oauth email]", JSON.stringify(localMessage, null, 2));
+  console.info("[X-Oauth email]", JSON.stringify(localMessage, null, 2));
   await writeLocalEmail(localMessage);
 }

@@ -3,16 +3,16 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "StarX-Oauth",
-    template: "%s | StarX-Oauth",
+    default: "X-Oauth",
+    template: "%s | X-Oauth",
   },
   description: "一个更容易用的账号中心，支持邮箱登录、邮件登录、用设备登录、两步确认、密码找回和应用访问确认。",
-  authors: [{ name: "StarX-Oauth" }],
-  creator: "StarX-Oauth",
-  publisher: "StarX-Oauth",
+  authors: [{ name: "X-Oauth" }],
+  creator: "X-Oauth",
+  publisher: "X-Oauth",
   openGraph: {
-    title: "StarX-Oauth",
-    siteName: "StarX-Oauth",
+    title: "X-Oauth",
+    siteName: "X-Oauth",
     description: "面向普通用户的极简账号中心。",
     type: "website",
   },

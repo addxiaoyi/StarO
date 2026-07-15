@@ -1,4 +1,4 @@
-# StarX-Oauth Production Runbook
+# X-Oauth Production Runbook
 
 This runbook keeps production database and connection-code operations repeatable before a specific hosting platform is chosen. Replace paths, database URLs, and secret management commands with the deployment provider's equivalents.
 

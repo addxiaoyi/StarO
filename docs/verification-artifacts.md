@@ -1,4 +1,4 @@
-# StarX-Oauth Verification Artifacts
+# X-Oauth Verification Artifacts
 
 This file is a current-state map for local verification artifacts. It does not delete or move any screenshots; it only explains which files are most useful for final review.
 

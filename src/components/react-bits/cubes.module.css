@@ -7,14 +7,21 @@
   width: 50%;
   aspect-ratio: 1 / 1;
   height: auto;
+  /* 确保子元素不溢出容器 */
+  overflow: hidden;
 }
 
 .scene {
   display: grid;
   width: 100%;
   height: 100%;
+  /* 修复 Safari/Edge 透视问题 */
+  -webkit-perspective: var(--cube-perspective);
   perspective: var(--cube-perspective);
   grid-auto-rows: 1fr;
+  /* 修复 transform-style 支持 */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
 }
 
 .cube {

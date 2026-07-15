@@ -19,13 +19,13 @@ import { dbPoolConfig } from "@/lib/db-config";
 if (process.env.NODE_ENV === "production" && !isProductionBuildPhase()) {
   const validation = validateEnvironment();
   if (!validation.isValid) {
-    console.error("[StarX-OAuth] 环境配置错误:");
+    console.error("[X-OAuth] 环境配置错误:");
     validation.errors.forEach((e) => console.error(`  - ${e}`));
     if (typeof process.exit === "function") {
       process.exit(1);
     }
   }
-  validation.warnings.forEach((w) => console.warn(`[StarX-OAuth] ${w}`));
+  validation.warnings.forEach((w) => console.warn(`[X-OAuth] ${w}`));
 }
 
 type StarXAuthApi = {
@@ -190,7 +190,26 @@ export const auth = new Proxy({} as StarXAuth, {
   },
 });
 
-export async function requireServerSession(headers: Headers) {
+/**
+ * 服务器端会话获取
+ * 用于在服务端组件或 API 路由中获取当前用户会话
+ *
+ * @param headers - HTTP 请求头（包含 cookie）
+ * @returns 会话信息，未登录则返回 null
+ *
+ * @example
+ * ```typescript
+ * // 在 API 路由中使用
+ * export async function GET(req: Request) {
+ *   const session = await requireServerSession(req.headers);
+ *   if (!session) {
+ *     return Response.json({ error: "Unauthorized" }, { status: 401 });
+ *   }
+ *   // 处理请求...
+ * }
+ * ```
+ */
+export async function requireServerSession(headers: Headers): Promise<StarXSession | null> {
   const response = await fetch(`${getBaseUrl()}/api/auth/get-session`, {
     headers: {
       cookie: headers.get("cookie") || "",
@@ -205,6 +224,10 @@ export async function requireServerSession(headers: Headers) {
   return (await response.json()) as StarXSession;
 }
 
-export function redirectTarget() {
+/**
+ * 获取重定向目标 URL
+ * 用于登录后的默认跳转地址
+ */
+export function redirectTarget(): string {
   return DEFAULT_CALLBACK_URL;
 }

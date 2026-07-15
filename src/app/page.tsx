@@ -58,10 +58,10 @@ export default function HomePage() {
       {/* ========== 背景层 ========== */}
       <div className="fixed inset-0 bg-gradient-to-b from-[#020208] via-[#050510] to-[#020208]" />
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[700px]">
-        <div className="glow-1 w-full h-full bg-gradient-to-b from-blue-600/15 via-indigo-600/8 to-transparent rounded-full blur-[160px]" />
+        <div className="glow-1 w-full h-full bg-gradient-to-b from-blue-600/15 via-indigo-600/8 to-transparent rounded-full" style={{ filter: 'blur(160px)', WebkitFilter: 'blur(160px)' }} />
       </div>
       <div className="fixed top-1/3 right-1/4 w-[500px] h-[500px]">
-        <div className="glow-2 w-full h-full bg-gradient-to-br from-purple-600/10 to-transparent rounded-full blur-[120px]" />
+        <div className="glow-2 w-full h-full bg-gradient-to-br from-purple-600/10 to-transparent rounded-full" style={{ filter: 'blur(120px)', WebkitFilter: 'blur(120px)' }} />
       </div>
       <div className="fixed inset-0 opacity-[0.02]"
         style={{ backgroundImage: 'linear-gradient(rgba(96,165,250,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.4) 1px, transparent 1px)', backgroundSize: '80px 80px' }}
@@ -70,28 +70,12 @@ export default function HomePage() {
       {/* ========== 导航 ========== */}
       <header className="relative z-50 fixed top-0 w-full px-5 py-4 sm:px-16 sm:py-6">
         <nav className="flex items-center justify-between max-w-5xl mx-auto">
-          {/* Logo - 抽象 X */}
+                    {/* Logo - X */}
           <div className="flex items-center gap-3">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              {/* 渐变背景圆 */}
-              <circle cx="16" cy="16" r="14" fill="url(#nav-bg)"/>
-              {/* 抽象 X - 两条渐变线条 */}
-              <path
-                className="logo-outer"
-                d="M10 10L22 22M22 10L10 22"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-              <defs>
-                <linearGradient id="nav-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#3b82f6"/>
-                  <stop offset="50%" stopColor="#6366f1"/>
-                  <stop offset="100%" stopColor="#8b5cf6"/>
-                </linearGradient>
-              </defs>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path className="logo-outer" d="M11 11L21 21M21 11L11 21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
-            <span className="logo-txt text-[15px] font-semibold tracking-[0.06em] text-white">StarX</span>
+            <span className="logo-txt text-[15px] font-semibold tracking-[0.06em] text-white">X</span>
           </div>
 
           {/* 链接 */}
@@ -107,12 +91,12 @@ export default function HomePage() {
       </header>
 
       {/* ========== Hero ========== */}
-      <section className="relative min-h-[78svh] flex flex-col justify-end px-6 pb-10 pt-24 sm:min-h-screen sm:px-16 sm:pb-36 sm:pt-0">
+      <section className="relative min-h-[600px] flex flex-col justify-end px-6 pb-10 pt-24 sm:min-h-screen sm:px-16 sm:pb-36 sm:pt-0">
         <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-[#020208] via-[#020208]/50 to-transparent" />
 
         <div className="relative max-w-4xl">
           {/* Badge */}
-          <div className="badge mb-6 inline-flex items-center gap-3 rounded-full border border-[#1a1a2a] bg-[#0c0c18]/90 px-5 py-2.5 backdrop-blur-xl sm:mb-14">
+          <div className="badge mb-6 inline-flex items-center gap-3 rounded-full border border-[#1a1a2a] px-5 py-2.5 sm:mb-14" style={{ backgroundColor: 'rgba(12, 12, 24, 0.9)' }}>
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[10px] text-[#585870] tracking-[0.12em] uppercase">安全认证</span>
             <span className="text-[#252538] mx-2">|</span>
@@ -185,7 +169,7 @@ export default function HomePage() {
       {/* ========== Section 3: OAuth ========== */}
       <section className="oauth-section relative px-16 py-40 border-t border-[#0c0c18]">
         <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-to-r from-blue-600/6 to-purple-600/4 rounded-full blur-[180px]" />
+          <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-to-r from-blue-600/6 to-purple-600/4 rounded-full" style={{ filter: "blur(180px)", WebkitFilter: "blur(180px)" }} />
         </div>
 
         <div className="relative max-w-5xl mx-auto">
@@ -196,10 +180,8 @@ export default function HomePage() {
                 {/* 头部 */}
                 <div className="flex items-center gap-5 pb-5 border-b border-[#141424]">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 flex items-center justify-center">
-                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-                      <circle cx="16" cy="16" r="10" stroke="white" strokeWidth="1.5" fill="none" opacity="0.4" />
-                      <circle cx="16" cy="16" r="6" fill="white" fillOpacity="0.3" />
-                      <circle cx="14" cy="14" r="2" fill="white" fillOpacity="0.5" />
+                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11 11L21 21M21 11L11 21" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
                     </svg>
                   </div>
                   <div>
@@ -306,26 +288,14 @@ export default function HomePage() {
       {/* ========== CTA ========== */}
       <section className="cta-section relative px-16 py-52 border-t border-[#0c0c18]">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-b from-blue-600/10 to-transparent rounded-full blur-[200px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-b from-blue-600/10 to-transparent rounded-full" style={{ filter: "blur(200px)", WebkitFilter: "blur(200px)" }} />
         </div>
 
         <div className="relative max-w-2xl mx-auto text-center">
           {/* Logo */}
           <div className="cta-logo-wrap inline-flex items-center justify-center mb-12">
-            <svg width="80" height="80" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="14" stroke="url(#cta-ring)" strokeWidth="0.75" fill="none" opacity="0.3" />
-              <circle cx="16" cy="16" r="10" fill="url(#cta-fill)" />
-              <circle cx="13" cy="13" r="2.5" fill="white" fillOpacity="0.4" />
-              <defs>
-                <linearGradient id="cta-ring" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#60a5fa" />
-                  <stop offset="1" stopColor="#818cf8" />
-                </linearGradient>
-                <radialGradient id="cta-fill" cx="30%" cy="30%" r="70%" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </radialGradient>
-              </defs>
+            <svg width="80" height="80" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 11L21 21M21 11L11 21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </div>
 
@@ -347,12 +317,10 @@ export default function HomePage() {
       <footer className="relative px-16 py-8 border-t border-[#0c0c18]">
         <div className="footer-content flex items-center justify-between max-w-5xl mx-auto">
           <div className="flex items-center gap-2.5">
-            <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="11" stroke="#60a5fa" strokeWidth="1" fill="none" opacity="0.4" />
-              <circle cx="16" cy="16" r="7" fill="#3b82f6" fillOpacity="0.3" />
-              <circle cx="14" cy="14" r="1.5" fill="white" fillOpacity="0.4" />
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 11L21 21M21 11L11 21" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
             </svg>
-            <p className="text-[11px] text-[#404050]">StarX</p>
+            <p className="text-[11px] text-[#404050]">X</p>
           </div>
           <div className="flex gap-8 text-[11px] text-[#404050]">
             <Link href="/sign-in" className="hover:text-[#606068] transition-colors duration-200">登录</Link>

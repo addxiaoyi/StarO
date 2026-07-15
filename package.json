@@ -14,7 +14,9 @@
     "monitor:connection-codes": "tsx scripts/connection-code-monitor.ts",
     "smoke:deployment": "tsx scripts/deployment-smoke.ts",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:session": "playwright test tests/e2e/session-toggle.spec.ts --headed --workers=1",
+    "test:e2e:session-ci": "playwright test tests/e2e/session-toggle.spec.ts --workers=1",
   },
   "dependencies": {
     "@better-auth/api-key": "^1.6.14",

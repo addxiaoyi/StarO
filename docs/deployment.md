@@ -1,6 +1,6 @@
-# StarX-Oauth 部署指南
+# X-Oauth 部署指南
 
-本文档说明如何在宝塔面板环境中部署 StarX-Oauth。
+本文档说明如何在宝塔面板环境中部署 X-Oauth。
 
 ## 部署架构
 
@@ -45,7 +45,7 @@ BETTER_AUTH_URL=https://auth.star-web.top
 DATABASE_URL=postgresql://用户名:密码@localhost:5432/数据库名
 
 # 邮件配置
-EMAIL_FROM=StarX-Oauth <noreply@你的域名>
+EMAIL_FROM=X-Oauth <noreply@你的域名>
 RESEND_API_KEY=你的 Resend API Key
 
 # OAuth 提供商（按需配置）
@@ -174,7 +174,7 @@ pm2 startup
 # 创建 systemd 服务文件
 cat > /etc/systemd/system/starx-oauth.service << 'EOF'
 [Unit]
-Description=StarX-Oauth
+Description=X-Oauth
 After=network.target postgresql.service
 
 [Service]
