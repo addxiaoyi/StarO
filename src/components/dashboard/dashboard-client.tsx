@@ -33,9 +33,17 @@ interface SessionExtraInfo {
   canToggle?: boolean;
 }
 
-const SessionInfo = SessionInfo & SessionExtraInfo;
+type SessionInfo = {
+  id: string;
+  userId: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  expiresAt?: Date | string | null;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+} & SessionExtraInfo;
 
-export function DashboardClient({ user }: DashboardClientProps) {
+type DashboardAction =
   | "sign-out"
   | "passkey"
   | "enable-2fa"

@@ -117,8 +117,9 @@ export function SessionManager({ className }: SessionManagerProps) {
       const authClient = starxAuthClient();
       const result = await authClient.getSession();
 
-      if (result instanceof Error) {
-        return { error: result.message || 'Unknown error' };
+      if (result instanceof Error || !result?.data) {
+        console.error("获取会话失败:", result instanceof Error ? result.message : 'Unknown error');
+        return;
       }
 
       const sessions = result.data as SessionListResponse;

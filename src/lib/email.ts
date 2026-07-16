@@ -7,6 +7,39 @@ import { APP_NAME } from "@/lib/app-config";
 let resend: Resend | null = null;
 let smtpTransporter: nodemailer.Transporter | null = null;
 
+// Rate limiting for email sending
+const emailRateLimit = {
+  perMinute: new Map<string, { count: number; resetAt: number }>(),
+  maxPerMinute: 10,
+};
+
+// Clean up old rate limit entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of emailRateLimit.perMinute) {
+    if (value.resetAt < now) {
+      emailRateLimit.perMinute.delete(key);
+    }
+  }
+}, 60000);
+
+function checkEmailRateLimit(email: string): boolean {
+  const now = Date.now();
+  const entry = emailRateLimit.perMinute.get(email);
+
+  if (!entry || entry.resetAt < now) {
+    emailRateLimit.perMinute.set(email, { count: 1, resetAt: now + 60000 });
+    return true;
+  }
+
+  if (entry.count >= emailRateLimit.maxPerMinute) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
 function getResend() {
   if (!process.env.RESEND_API_KEY) {
     return null;
@@ -27,12 +60,18 @@ function getSmtpTransporter() {
   if (!smtpTransporter) {
     smtpTransporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "465"),
+      port: parseInt(process.env.SMTP_PORT || "465", 10),
       secure: process.env.SMTP_SECURE === "true",
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Connection timeout
+      connectionTimeout: 10000,
+      // Greeting timeout
+      greetingTimeout: 10000,
+      // Socket timeout
+      socketTimeout: 30000,
     });
   }
 
@@ -116,7 +155,13 @@ async function sendViaSmtp(
   }
 }
 
-export async function sendAuthEmail(message: AuthEmail) {
+export async function sendAuthEmail(message: AuthEmail): Promise<{ success: boolean; reason?: string }> {
+  // Rate limiting check
+  if (!checkEmailRateLimit(message.to)) {
+    console.warn(`[X-Oauth] Email rate limit exceeded for: ${message.to}`);
+    return { success: false, reason: "rate_limit_exceeded" };
+  }
+
   const from = process.env.EMAIL_FROM || "X-Oauth <noreply@localhost>";
   const text = [
     message.title,
@@ -167,7 +212,7 @@ export async function sendAuthEmail(message: AuthEmail) {
     const sent = await sendViaResend(from, message, html, text);
     if (sent) {
       console.info("[X-Oauth email] 已通过 Resend 发送");
-      return;
+      return { success: true };
     }
     console.warn("[X-Oauth] Resend 发送失败，尝试 SMTP...");
   }
@@ -176,11 +221,12 @@ export async function sendAuthEmail(message: AuthEmail) {
     const sent = await sendViaSmtp(from, message, html, text);
     if (sent) {
       console.info("[X-Oauth email] 已通过 SMTP 发送");
-      return;
+      return { success: true };
     }
     console.warn("[X-Oauth] SMTP 发送失败，保存到本地...");
   }
 
   console.info("[X-Oauth email]", JSON.stringify(localMessage, null, 2));
   await writeLocalEmail(localMessage);
+  return { success: true, reason: "saved_locally" };
 }

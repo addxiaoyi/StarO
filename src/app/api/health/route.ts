@@ -23,7 +23,12 @@ interface HealthCheckResult {
   };
 }
 
-export async function GET(): Promise<NextResponse<HealthCheckResult>> {
+export async function GET(request: Request): Promise<NextResponse<HealthCheckResult>> {
+  // 限制详细信息的访问（可选认证检查）
+  const authHeader = request.headers.get("authorization");
+  const internalToken = process.env.HEALTH_CHECK_TOKEN;
+  const isInternalRequest = internalToken && authHeader === `Bearer ${internalToken}`;
+
   const memoryUsage = process.memoryUsage();
   const memoryPercentage = (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100;
 
@@ -45,10 +50,11 @@ export async function GET(): Promise<NextResponse<HealthCheckResult>> {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     service: "starx-oauth",
-    version: process.env.npm_package_version || "1.0.0",
-    checks: {
+    // 只在内部请求时显示版本信息
+    version: isInternalRequest ? (process.env.npm_package_version || "1.0.0") : undefined,
+    checks: isInternalRequest ? {
       memory: memoryCheck,
-    },
+    } : undefined,
   };
 
   const httpStatus = overallStatus === "unhealthy" ? 503 : overallStatus === "degraded" ? 200 : 200;

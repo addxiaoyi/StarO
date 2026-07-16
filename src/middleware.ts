@@ -8,12 +8,14 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "Content-Security-Policy":
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
-    "style-src 'self' 'unsafe-inline' https:; " +
+    "script-src 'self' 'unsafe-hashes'; " +  // 允许 hash 验证的内联脚本
+    "style-src 'self' 'unsafe-inline'; " +   // Tailwind 需要
     "img-src 'self' data: https:; " +
     "font-src 'self' data:; " +
-    "connect-src 'self' https://*; " +
-    "frame-ancestors 'self';",
+    "connect-src 'self' https:; " +
+    "frame-ancestors 'self'; " +
+    "base-uri 'self'; " +
+    "form-action 'self';",
 };
 
 import { NextResponse } from "next/server";
@@ -27,11 +29,21 @@ export function middleware(request: NextRequest) {
     response.headers.set(key, value);
   }
 
+  // 防止 HTTP 降级攻击 - 确保使用 HTTPS
+  const proto = request.headers.get("x-forwarded-proto");
+  if (proto === "http" && process.env.NODE_ENV === "production") {
+    return NextResponse.redirect(
+      new URL(request.url).toString().replace("http://", "https://"),
+      301,
+    );
+  }
+
   return response;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // 匹配所有路径，除了静态资源和 Next.js 内部路径
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };

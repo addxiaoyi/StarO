@@ -159,7 +159,11 @@ function getDatabase(options: Record<string, unknown>) {
 
       // 监听连接池错误，避免进程崩溃
       pgPool.on("error", (err) => {
-        console.error("[db-pool] idle client error", err);
+        console.error("[db-pool] Unexpected error on idle client", {
+          error: err.message,
+          // 生产环境不记录完整堆栈以避免日志过大
+          stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+        });
       });
     }
 

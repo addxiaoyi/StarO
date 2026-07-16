@@ -36,6 +36,19 @@ const querySchema = z.object({
  * GET /api/security/events - 获取安全事件
  */
 export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const view = searchParams.get("view");
+
+  // 如果请求的是统计数据
+  if (view === "stats") {
+    return getSecurityStats(req);
+  }
+
+  // 否则返回事件列表
+  return getSecurityEvents(req);
+}
+
+async function getSecurityEvents(req: NextRequest) {
   try {
     const auth = getAuth();
     const sessionInfo = (await auth.api.getSession({
@@ -155,9 +168,9 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * GET /api/security/stats - 获取安全统计
+ * 获取安全统计数据
  */
-export async function GET_stats(req: NextRequest) {
+async function getSecurityStats(req: NextRequest) {
   try {
     const auth = getAuth();
     const sessionInfo = (await auth.api.getSession({
