@@ -1,0 +1,17 @@
+[railway]
+  plugin = ["nixpacks"]
+
+[nixpacks]
+  # Next.js 16 + Node.js 自动检测
+  # 默认构建: npm install && npm run build
+  # 默认启动: npm run start
+
+[deploy]
+  healthcheckPath = "/"
+  startCommand = "npm run start"
+
+[build]
+  command = "npm install && npm run build"
+
+[variables]
+  NODE_ENV = "production"
