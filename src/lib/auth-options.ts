@@ -27,9 +27,12 @@ import { sendAuthEmail } from "./email";
 
 export const DEVELOPMENT_ADMIN_USER_ID = "starx-dev-admin";
 export const DEVELOPMENT_ADMIN_ACCOUNT_RECORD_ID = "starx-dev-admin-credential";
-// Generated with Better Auth's default password hasher for the local-only password: Password123!
+
+// 默认开发管理员账号（仅本地开发使用，生产环境请勿使用）
+// 邮箱: admin@localhost / 密码: admin
+// Generated with Better Auth's default password hasher for "admin"
 export const DEFAULT_DEVELOPMENT_ADMIN_PASSWORD_HASH =
-  "ad8f7a0c6f8c9d6c78a4a950718356be:3f69c1536f8626ec47b33948e990a3a759c0dbbd7017f45305b3ca018c0423ea6c9e45955a2c733ef113052bf4181d213f2b0f42d88a63c8d186701caf1210ae";
+  "327a2a377f1db30cfe191c12ead3480e:de9a10fc382235b19d9c2aac56051f2cca9a8c68b0b664263ea3f12311599c473c1f6d0d77e90b33aed126cd41005ed7b3a9af718740e3762522601aadd4104e";
 
 type CreateAuthOptionsInput = {
   database?: BetterAuthOptions["database"];
@@ -74,16 +77,20 @@ function isLocalBetterAuthUrl() {
 }
 
 export function getDevelopmentAdminSeed() {
-  const email = process.env.STARX_DEV_ADMIN_EMAIL?.trim().toLowerCase();
+  // 默认管理员邮箱（可通过环境变量覆盖）
+  const defaultEmail = "admin@localhost";
+  const email = process.env.STARX_DEV_ADMIN_EMAIL?.trim().toLowerCase() || defaultEmail;
 
-  if (!email || (!isLocalTestMemoryDatabaseEnabled() && process.env.DATABASE_URL) || !isLocalBetterAuthUrl()) {
+  // 仅在本地开发环境启用（无 DATABASE_URL 或使用内存数据库）
+  if ((!isLocalTestMemoryDatabaseEnabled() && process.env.DATABASE_URL) || !isLocalBetterAuthUrl()) {
+    // 生产环境不自动创建管理员
     return null;
   }
 
   return {
     email,
     id: DEVELOPMENT_ADMIN_USER_ID,
-    name: process.env.STARX_DEV_ADMIN_NAME?.trim() || "本地管理员",
+    name: process.env.STARX_DEV_ADMIN_NAME?.trim() || "管理员",
     passwordHash:
       process.env.STARX_DEV_ADMIN_PASSWORD_HASH?.trim() || DEFAULT_DEVELOPMENT_ADMIN_PASSWORD_HASH,
   };
