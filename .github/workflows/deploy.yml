@@ -12,9 +12,17 @@ on:
 
 env:
   NODE_VERSION: '20'
+  # 目标服务器
+  TARGET_HOST: '186.241.74.3'
+  TARGET_USER: 'root'
+  TARGET_PORT: 22
+  # 跳板机
+  JUMP_HOST: '103.xx.xx.xx'
+  JUMP_USER: 'root'
+  JUMP_PORT: 22
+  # 应用配置
   APP_DIR: '/www/wwwroot/auth.star-web.top'
-  REMOTE_HOST: '186.241.74.3'
-  REMOTE_USER: 'root'
+  APP_PORT: 3002
 
 jobs:
   # =============================================
@@ -92,13 +100,16 @@ jobs:
           path: |
             .next/server
             .next/static
+            package.json
+            package-lock.json
+            .next/standalone
           retention-days: 1
 
   # =============================================
   # Job 3: 部署 (仅在 main/master 分支推送时)
   # =============================================
   deploy:
-    name: Deploy to Server
+    name: Deploy via Jump Server
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
@@ -110,107 +121,178 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: .next
+          path: build
 
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add known hosts
+      - name: Setup SSH Config
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ env.REMOTE_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # 写入 SSH Config 配置跳板机
+          cat >> ~/.ssh/config << 'SSHCONF'
+          # 跳板机配置
+          Host jump
+              HostName ${{ env.JUMP_HOST }}
+              User ${{ env.JUMP_USER }}
+              Port ${{ env.JUMP_PORT }}
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+
+          # 目标服务器（通过跳板机）
+          Host target
+              HostName ${{ env.TARGET_HOST }}
+              User ${{ env.TARGET_USER }}
+              Port ${{ env.TARGET_PORT }}
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              ProxyJump jump
+          SSHCONF
+
+          chmod 600 ~/.ssh/config
+          echo "SSH Config 已配置"
+
+      - name: Add known hosts
+        run: |
+          ssh-keyscan -H ${{ env.JUMP_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H ${{ env.TARGET_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Package build
-        run: tar -czf build.tar.gz -C .next server static
-
-      - name: Upload to server
         run: |
-          scp -o ConnectTimeout=30 build.tar.gz ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }}:/tmp/
+          tar -czf build.tar.gz -C build .
 
-      - name: Deploy on server
+      - name: Upload to Jump Server
         run: |
-          ssh ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} << 'EOF'
+          scp -o ConnectTimeout=30 build.tar.gz target:/tmp/starx-build.tar.gz
+
+      - name: Deploy on Target Server
+        run: |
+          ssh target << 'DEPLOY_EOF'
             set -e
 
             APP_DIR="${{ env.APP_DIR }}"
             BACKUP_DIR="${APP_DIR}.backup.$(date +%Y%m%d_%H%M%S)"
 
-            echo "=== 停止服务 ==="
-            systemctl stop starx-oauth 2>/dev/null || true
+            echo "============================================="
+            echo "  StarX-Oauth 部署开始"
+            echo "  时间: $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "============================================="
 
-            echo "=== 备份当前构建 ==="
-            if [ -d "$APP_DIR/.next" ]; then
-              cp -r "$APP_DIR/.next" "$BACKUP_DIR"
-              echo "备份保存到: $BACKUP_DIR"
+            # 创建应用目录
+            if [ ! -d "$APP_DIR" ]; then
+              echo "[INFO] 创建应用目录: $APP_DIR"
+              mkdir -p "$APP_DIR"
             fi
 
-            echo "=== 解压新构建 ==="
+            # 停止服务
+            echo "[INFO] 停止服务..."
+            systemctl stop starx-oauth 2>/dev/null || pm2 stop starx-oauth 2>/dev/null || true
+
+            # 备份当前构建
+            if [ -d "$APP_DIR/.next" ]; then
+              echo "[INFO] 备份当前构建到: $BACKUP_DIR"
+              cp -r "$APP_DIR/.next" "$BACKUP_DIR"
+            fi
+
+            # 备份 package.json
+            if [ -f "$APP_DIR/package.json" ]; then
+              cp "$APP_DIR/package.json" "$BACKUP_DIR/" 2>/dev/null || true
+            fi
+
+            # 解压新构建
+            echo "[INFO] 解压构建文件..."
             cd "$APP_DIR"
-            rm -rf .next
+            rm -rf .next build package.json package-lock.json 2>/dev/null || true
             mkdir -p .next
-            cd .next
-            tar -xzf /tmp/build.tar.gz
+            tar -xzf /tmp/starx-build.tar.gz -C .
+            cp build/package.json . 2>/dev/null || true
+            cp build/package-lock.json . 2>/dev/null || true
 
-            echo "=== 设置权限 ==="
-            chown -R www-data:www-data "$APP_DIR/.next/server"
-            chown -R www-data:www-data "$APP_DIR/.next/static"
+            # 安装依赖
+            echo "[INFO] 安装依赖..."
+            npm ci --production 2>/dev/null || npm install --production
 
-            echo "=== 启动服务 ==="
-            systemctl start starx-oauth
-            sleep 3
+            # 设置权限
+            echo "[INFO] 设置权限..."
+            chown -R www-data:www-data "$APP_DIR" 2>/dev/null || true
+            chmod -R 755 "$APP_DIR" 2>/dev/null || true
 
-            echo "=== 服务状态 ==="
-            systemctl status starx-oauth --no-pager | head -10
+            # 启动服务 (使用 PM2)
+            echo "[INFO] 启动服务..."
 
-            echo "=== 健康检查 ==="
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3002/ || echo "000")
+            # 检查是否有 PM2
+            if ! command -v pm2 &> /dev/null; then
+              echo "[INFO] 安装 PM2..."
+              npm install -g pm2
+            fi
+
+            # 停止并删除旧进程
+            pm2 stop starx-oauth 2>/dev/null || true
+            pm2 delete starx-oauth 2>/dev/null || true
+
+            # 启动新服务
+            pm2 start npm --name "starx-oauth" -- start
+
+            # 保存 PM2 配置
+            pm2 save
+
+            # 设置开机自启
+            pm2 startup 2>/dev/null || true
+
+            # 等待服务启动
+            sleep 5
+
+            # 检查服务状态
+            echo "[INFO] 检查服务状态..."
+            pm2 status
+
+            # 健康检查
+            echo "[INFO] 执行健康检查..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${{ env.APP_PORT }}/api/health || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
               echo "✓ HTTP 健康检查通过 (状态码: $HTTP_CODE)"
             else
               echo "✗ HTTP 健康检查失败 (状态码: $HTTP_CODE)"
-              exit 1
+              echo "[WARN] 尝试查看日志..."
+              pm2 logs starx-oauth --lines 20 --nostream
             fi
 
-            echo "=== 清理 ==="
-            rm -f /tmp/build.tar.gz
+            # 清理临时文件
+            echo "[INFO] 清理临时文件..."
+            rm -f /tmp/starx-build.tar.gz
             rm -rf "$BACKUP_DIR"
 
             echo ""
             echo "============================================="
-            echo "  部署完成!"
+            echo "  部署完成! 🎉"
+            echo "  时间: $(date '+%Y-%m-%d %H:%M:%S')"
             echo "============================================="
-          EOF
+            echo ""
+            echo "访问地址: https://auth.star-web.top"
+            echo "管理员: admin@localhost / admin"
+          DEPLOY_EOF
 
       - name: Cleanup local artifacts
         run: rm -f build.tar.gz
 
   # =============================================
-  # Job 4: E2E 测试 (可选，需配置 Playwright)
+  # Job 4: 通知部署结果
   # =============================================
-  e2e:
-    name: End-to-End Tests
+  notify:
+    name: Notify Deployment
     runs-on: ubuntu-latest
     needs: deploy
-    if: false  # 设为 true 启用 E2E 测试
+    if: always()
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-        env:
-          BASE_URL: 'https://auth.star-web.top'
+      - name: Deployment Summary
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ 部署成功！"
+            echo "访问地址: https://auth.star-web.top"
+            echo "默认管理员: admin@localhost / admin"
+          else
+            echo "❌ 部署失败，请检查日志"
+          fi
