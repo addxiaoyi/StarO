@@ -16,6 +16,7 @@ env:
   TARGET_HOST: '186.241.74.3'
   TARGET_USER: 'root'
   TARGET_PORT: 22
+  TARGET_PASSWORD: ${{ secrets.TARGET_SERVER_PASSWORD }}
   # 跳板机
   JUMP_HOST: '103.40.14.25'
   JUMP_USER: 'add'
@@ -123,12 +124,7 @@ jobs:
           name: build-artifacts
           path: build
 
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Setup SSH Config
+      - name: Setup SSH Config with Password
         run: |
           mkdir -p ~/.ssh
 
@@ -155,6 +151,9 @@ jobs:
           chmod 600 ~/.ssh/config
           echo "SSH Config 已配置"
 
+          # 安装 sshpass 用于密码认证
+          apt-get update && apt-get install -y sshpass
+
       - name: Add known hosts
         run: |
           ssh-keyscan -H ${{ env.JUMP_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
@@ -166,11 +165,11 @@ jobs:
 
       - name: Upload to Jump Server
         run: |
-          scp -o ConnectTimeout=30 build.tar.gz target:/tmp/starx-build.tar.gz
+          sshpass -p '${{ env.TARGET_PASSWORD }}' scp -o ConnectTimeout=30 build.tar.gz -P ${{ env.JUMP_PORT }} ${{ env.JUMP_USER }}@${{ env.JUMP_HOST }}:/tmp/starx-build.tar.gz
 
       - name: Deploy on Target Server
         run: |
-          ssh target << 'DEPLOY_EOF'
+          sshpass -p '${{ env.TARGET_PASSWORD }}' ssh -o StrictHostKeyChecking=no -p ${{ env.JUMP_PORT }} ${{ env.JUMP_USER }}@${{ env.JUMP_HOST }} "ssh -o StrictHostKeyChecking=no root@${{ env.TARGET_HOST }} 'bash -s'" << 'DEPLOY_EOF'
             set -e
 
             APP_DIR="${{ env.APP_DIR }}"
