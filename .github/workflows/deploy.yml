@@ -17,9 +17,9 @@ env:
   TARGET_USER: 'root'
   TARGET_PORT: 22
   # 跳板机
-  JUMP_HOST: '103.xx.xx.xx'
-  JUMP_USER: 'root'
-  JUMP_PORT: 22
+  JUMP_HOST: '103.40.14.25'
+  JUMP_USER: 'add'
+  JUMP_PORT: 19198
   # 应用配置
   APP_DIR: '/www/wwwroot/auth.star-web.top'
   APP_PORT: 3002
